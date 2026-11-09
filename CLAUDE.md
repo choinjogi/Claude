@@ -1,0 +1,27 @@
+# 산성식육점 작업 메모 (Claude가 매 대화 시작 시 읽음)
+
+## 구글 시트·폼 수정 방법 (중요)
+- 기본 Google Drive 연결(커넥터)은 **읽기 전용**이다. 이걸로 "수정 불가"라고 결론 내리지 말 것.
+- 클라우드 기본 환경에 구글 키가 저장돼 있다: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN`
+  (권한: drive, spreadsheets, forms.body, script.projects)
+- 시트·폼 수정은 이 키로 액세스 토큰을 받아 Sheets/Forms API를 직접 호출한다:
+  ```bash
+  TOK=$(curl -sS https://oauth2.googleapis.com/token \
+    -d "client_id=$GOOGLE_CLIENT_ID&client_secret=$GOOGLE_CLIENT_SECRET&refresh_token=$GOOGLE_REFRESH_TOKEN&grant_type=refresh_token" \
+    | python3 -c 'import sys,json;print(json.load(sys.stdin)["access_token"])')
+  ```
+- 토큰 발급이 실패(invalid_grant)하면 키가 만료된 것 → 사장님께 재발급 필요하다고 알릴 것.
+  (구글 클라우드 프로젝트가 '테스트' 상태면 7일마다 만료됨)
+- 쓰기 전후로 반드시 읽어서 확인한다.
+
+## 월 결산 파일 (예: "26년 11월")
+- 근태(근무시간) 추가·수정: **'설문지 응답 시트1'** 맨 아래에 행 추가
+  - 열: 타임스탬프 | 이름 | 근무 날짜 | 퇴근 시간 | 예외 출근시간 | 특이사항 | 오늘 근무는? | 대타라면 누구 대신?
+  - valueInputOption=USER_ENTERED, 날짜 `2026-11-04`, 시간 `20:00:00` 형식
+- '근무기록부'는 응답 시트를 수식(FILTER)으로 끌어오므로 직접 쓰지 말 것.
+- 알바 기본 출근 18:00 (직원명부 '정시출근' 열). 다르면 예외 출근시간에 기입.
+- 시트에 직접 쓰면 폼 제출 트리거(퇴근 본인확인·중복 경고)는 돌지 않는다. 매시간 점검·수식은 정상 반영.
+- 스케줄 없는 날 추가하면 '근태이상' 탭에 잡힐 수 있음 → 사장님께 확인 체크 안내.
+
+## 작업 기록
+- 2026-11-09: 김태현 11/4(수) 18:00~20:00 추가근무 2시간 입력 (₩21,000, 1주차 13.47h, 주휴 없음)
